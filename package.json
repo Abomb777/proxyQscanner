@@ -1,0 +1,28 @@
+{
+  "name": "proxyqscanner",
+  "version": "1.0.0",
+  "description": "proxyQscanner",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abomb777/proxyQscanner.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Abomb777/proxyQscanner/issues"
+  },
+  "homepage": "https://github.com/Abomb777/proxyQscanner#readme",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "got": "^11.8.2",
+    "promise-queue": "^2.2.5",
+    "tunnel": "0.0.6"
+  },
+  "devDependencies": {}
+}
