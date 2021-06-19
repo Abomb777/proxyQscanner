@@ -13,7 +13,7 @@ let proxies = ()=>{
     console.log("loading sources"); return Promise.resolve(rrr)};
 let output = ()=>{console.log;};
 
-let scanner = new Scanner(targets,proxies,output);
+let scanner = new Scanner(targets,proxies,output,{minq:2000,parallel: 200});
 scanner.start();
 //console.log(scanner);
 process.stdin.resume();

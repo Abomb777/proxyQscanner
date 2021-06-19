@@ -64,7 +64,7 @@ Object.defineProperty(Scanner, 'debug', {
 
 
 class Scanner {
-  constructor(targets, proxies, callback){
+  constructor(targets, proxies, callback, options){
     this.targets = targets;
     this.proxies = proxies;
     this.callback = callback;
@@ -72,8 +72,8 @@ class Scanner {
     this.loading=false;
 
     this.maxQueue = Infinity;
-    this.maxConcurrent =10;
-    this.minQsize =20;
+    this.maxConcurrent = options && options.parallel?options.parallel:10;
+    this.minQsize = options && options.minq?options.minq:20;
     this.queue = new Queue(this.maxConcurrent, this.maxQueue);
   }
   async start(){
