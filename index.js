@@ -4,6 +4,7 @@ const url = require('url');
 const uagent = require('./helpers/agents');
 const got = require('got');
 const tunnel = require('tunnel');
+const geo = require('./helpers/geo');
 //const request = require('request');
 /*
 function Scanner(targets, sources, callback) {
@@ -64,13 +65,30 @@ Object.defineProperty(Scanner, 'debug', {
 
 
 class Scanner {
-  constructor(targets, proxies, callback, options){
+  constructor(targets, proxies, callback, options,logger){
     this.targets = targets;
     this.proxies = proxies;
     this.callback = callback;
     this.running = false;
     this.loading=false;
 
+    if(!logger) {
+      const { createLogger, transports ,format} = require('winston');
+      const logger = createLogger({
+        level: 'info',
+        format: format.combine(
+            format.json(),
+            format.timestamp()
+        ),
+        transports: [
+          // - Write all logs error (and below) to `somefile.log`.
+          new transports.Console(),
+          //new transports.File({ filename: 'somefile.log', level: 'error' })
+        ]
+      });
+      logger.warn("loading internal logger!");
+      this.logger=logger;
+    } else this.logger=logger;
     this.maxQueue = Infinity;
     this.maxConcurrent = options && options.parallel?options.parallel:10;
     this.minQsize = options && options.minq?options.minq:20;
@@ -139,8 +157,8 @@ class Scanner {
           //resolver();
         }*/
         //if(this.queue.getPendingLength() ==0 || this.queue.getQueueLength()==0) resolver();
-        console.log("qq " + this.queue.getQueueLength());
-        console.log("PP " + this.queue.getPendingLength());
+        this.logger.debug({pending : this.queue.getQueueLength(),processing: this.queue.getPendingLength()});
+
       });
     })
   }
@@ -155,10 +173,13 @@ class Scanner {
       proxy: proxy,
       status: 404
     };
+    let gotresponse;
     let response = await timeoutPromise(7000 , async function (reso, reject) {
+      this.logger.debug(proxy);
       try {
-        let proxy = {
-          host: 'localhost'
+        let useproxy = {
+          host: proxy.host,
+          port: proxy.port
         };
         var httpheaders =  {
           'User-Agent': uagent(),
@@ -171,20 +192,27 @@ class Scanner {
           'Referer': 'https://'+theUrl.hostname+'/',
           'Cookie': 'aps03=ct=96&lng=1'
         };
-        let d= await got(target.scannerRequest, {
+        let gotresponse= await got(target.scannerRequest, {
           headers: httpheaders,
           agent: {
             https: tunnel.httpsOverHttp({
-              proxy: proxy
+              proxy: useproxy
             }),
             http: tunnel.httpOverHttp({
-              proxy: proxy
+              proxy: useproxy
             })
           }
         });
-        console.log(d);
-        if(response.statusCode==200) addproxy({url: target.url, proxy: proxy, status: response.statusCode});
-        reso({url: target.url, proxy: proxy, status: response.statusCode});
+        //console.log(response.body);
+        let rGeo={};
+        if(gotresponse.statusCode==200 && (target.goodString && gotresponse.body.indexOf(target.goodString)>-1)) {
+          if(typeof proxy.ip=="undefined") rGeo=await geo(proxy);
+         // console.log(r);
+        //  console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+target.scannerRequest);
+        //  console.log({target, proxy: proxy, status: gotresponse.statusCode});
+        //  this.callback({target, proxy: proxy, status: gotresponse.statusCode});
+        }
+        reso({target, proxy: Object.assign(proxy,rGeo), status: gotresponse.statusCode});
 
    /*
        // console.log(uagent());
@@ -219,11 +247,11 @@ class Scanner {
             });
 */
       } catch (e) {
-        console.log("ERROR ---> ");
+        this.logger.debug("ERROR ---> "+(gotresponse && gotresponse.statusCode?gotresponse.statusCode:''));
         //console.log(e);
         reso(default_resp);
       }
-    });
+    }.bind(this));
     //console.log(response);
     //console.log("n3");
 //	console.log(response?response:default_resp);

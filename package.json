@@ -22,7 +22,8 @@
   "dependencies": {
     "got": "^11.8.2",
     "promise-queue": "^2.2.5",
-    "tunnel": "0.0.6"
+    "tunnel": "0.0.6",
+    "winston": "^3.3.3"
   },
   "devDependencies": {}
 }
