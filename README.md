@@ -1,6 +1,7 @@
 # proxyQscanner
 proxyQscanner
 
+
 demo implementation
 ```js
 const qscanner = require('proxyqscanner');
