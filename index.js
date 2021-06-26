@@ -181,6 +181,7 @@ class Scanner {
           host: proxy.host,
           port: proxy.port
         };
+        if(proxy.username && proxy.password) useproxy['proxyAuth'] = proxy.username+':'+proxy.password;
         var httpheaders =  {
           'User-Agent': uagent(),
           'Sec-Fetch-Mode': 'cors',

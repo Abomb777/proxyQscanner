@@ -10,21 +10,18 @@ async function resolve(proxy) {
         {url: 'http://www.geoplugin.net/json.gp?ip=',ip_path:'geoplugin_request',geo_path:'geoplugin_countryCode'},
         {url: 'http://ifconfig.me/all.json',ip_path:'ip_addr'}
     ];
+    let useproxy = {
+        host: proxy.host,
+        port: proxy.port
+    };
+    if(proxy.username && proxy.password) useproxy['proxyAuth'] = proxy.username+':'+proxy.password;
 const options ={
     agent: {
         https: tunnel.httpsOverHttp({
-            proxy: {
-                host: proxy.host,
-                port: proxy.port,
-                proxyAuth: proxy.auth,
-            }
+            proxy: useproxy
         }),
         http: tunnel.httpOverHttp({
-            proxy: {
-                host: proxy.host,
-                port: proxy.port,
-                proxyAuth: proxy.auth,
-            }
+            proxy: useproxy
         })
     }
 };
@@ -39,7 +36,8 @@ for(let i=0; i<geoUrls.length;i++) {
         //console.log('ip:' + ip + ' country: ' + country);
         if (typeof ip == 'string') break;//return [ip,country]
     } catch (e){
-        console.log(e);
+        //console.log("resolvv");
+        //console.log(e);
     }
 }
 //console.log("resolved");
