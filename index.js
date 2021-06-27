@@ -65,14 +65,14 @@ Object.defineProperty(Scanner, 'debug', {
 
 
 class Scanner {
-  constructor(targets, proxies, callback, options,logger){
+  constructor(targets, proxies, callback, options){
     this.targets = targets;
     this.proxies = proxies;
     this.callback = callback;
     this.running = false;
     this.loading=false;
 
-    if(!logger) {
+    if(!options.logger) {
       const { createLogger, transports ,format} = require('winston');
       const logger = createLogger({
         level: 'info',
@@ -88,14 +88,14 @@ class Scanner {
       });
       logger.warn("loading internal logger!");
       this.logger=logger;
-    } else this.logger=logger;
+    } else this.logger=options.logger;
     this.maxQueue = Infinity;
     this.maxConcurrent = options && options.parallel?options.parallel:10;
     this.minQsize = options && options.minq?options.minq:20;
     this.queue = new Queue(this.maxConcurrent, this.maxQueue);
   }
   async start(){
-    console.log("start");
+    this.logger.info("start");
     this.running = true;
      await this.targets();
     this.scan();
@@ -105,11 +105,11 @@ class Scanner {
   }
   async scan(){
     if(this.loading) {
-      console.log('>>>>>>>>>>>>>>>>>>>');
+      this.logger.info('>>>>>>>>>>>>>>>>>>>');
       return;
     }
     this.loading=true;
-    console.log("scan");
+    this.logger.debug("scan");
     let targets =await this.targets();
     if(typeof targets.length=="undefined" || !(targets.length>0)) {
       setTimeout(()=>{
@@ -149,7 +149,7 @@ class Scanner {
         this.makeRequestForReport(targ, proxy, resolve);
       }.bind(this)).then(async () => {
         if(this.queue.getQueueLength()<this.minQsize) {
-          console.log("Load more "+this.queue.getQueueLength()+" < "+this.minQsize);
+          this.logger.debug("Load more "+this.queue.getQueueLength()+" < "+this.minQsize);
           await this.scan();
         }
  /*       if (this.queue.getQueueLength() < this.maxConcurrent) {
@@ -164,9 +164,7 @@ class Scanner {
   }
 
   async makeRequestForReport(target, proxy, callback){
-//    console.log("+++++++++++++++++++++++++++++++++"+proxy);
-    //console.log(target.url);
-    let theUrl = url.parse(target.scannerRequest);
+    let theUrl = url.parse(target.url);
 
     let default_resp = {
       url: target.url,
@@ -182,7 +180,7 @@ class Scanner {
           port: proxy.port
         };
         if(proxy.username && proxy.password) useproxy['proxyAuth'] = proxy.username+':'+proxy.password;
-        var httpheaders =  {
+        var baseHeaders =  {
           'User-Agent': uagent(),
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-origin',
@@ -193,7 +191,9 @@ class Scanner {
           'Referer': 'https://'+theUrl.hostname+'/',
           'Cookie': 'aps03=ct=96&lng=1'
         };
-        let gotresponse= await got(target.scannerRequest, {
+        let httpheaders = Object.assign(baseHeaders, target.headers);
+        if(target.cookies) httpheaders = Object.assign(httpheaders,target.cookies);
+        let gotresponse= await got(target.url, {
           headers: httpheaders,
           agent: {
             https: tunnel.httpsOverHttp({
