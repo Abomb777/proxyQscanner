@@ -49,8 +49,19 @@ let proxies = ()=>{
     console.log("loading sources"); return Promise.resolve(rrr)};
 let output = ()=>{console.log;};
 
-let scanner = new qscanner(targets,proxies,output,{minq:2000,parallel: 200});
+
+let options = {minq:2000,parallel: 200};
+
+let scanner = new qscanner(targets,proxies,output,options);
 scanner.start();
 //console.log(scanner);
 process.stdin.resume();
 ```
+
+## Options:
+| Property        | desc           | type  |
+| ------------- |:-------------:| -----:|
+| minq      | minimal Q size | int |
+| parallel      | number of parallel requests      |   int |
+| loglevel | loglevel     |   (debug / info / error) |
+| logger | external logger supported (pino / winston) | logger | 
