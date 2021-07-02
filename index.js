@@ -141,6 +141,10 @@ class Scanner {
       console.log(x)
   }
 
+  async qsize(){
+    return this.queue.getQueueLength();
+  }
+
   async processor(proxy,targ) {
     targ.result = [];
     //requested++;
